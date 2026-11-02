@@ -4,14 +4,14 @@ import { get, all, run, now, J } from './db.js';
 export const DEFAULT_SETTINGS = {
   store: {
     name: 'Luxury Bharat', tagline: "India's Premium Lifestyle Store",
-    support_email: 'luxurybhaarat@gmail.com', cod_enabled: false,
+    support_email: 'support@example.com', cod_enabled: false,
     shipping_flat: 9900, free_shipping_above: 299900,       // paise
     low_stock_default: 5,
     ambient_enabled: true, ambient_images: [],
   },
   footer: {
     about: 'Luxury Bharat brings considered clothing, footwear, accessories and pantry staples from across Bharat to your door.',
-    address: '', phone: '', email: 'luxurybhaarat@gmail.com', hours: '',
+    address: '', phone: '', email: 'support@example.com', hours: '',
     socials: { instagram: '', facebook: '', x: '', youtube: '' },
   },
   security: { max_failed_logins: 5, lockout_minutes: 15, session_days: 7, min_password_length: 10 },

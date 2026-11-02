@@ -6,7 +6,7 @@ import os from 'node:os';
 import path from 'node:path';
 
 const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'lb-test-'));
-Object.assign(process.env, { NODE_ENV: 'development', DATA_DIR: dir, OWNER_SETUP_TOKEN: 'test-setup-token-123456', PAYMENT_MODE: 'test', APP_URL: 'http://localhost:0', DEV_OUTBOX_ENABLED: '0' });
+Object.assign(process.env, { NODE_ENV: 'development', DATA_DIR: dir, OWNER_SETUP_TOKEN: 'test-setup-token-123456', PAYMENT_MODE: 'test', APP_URL: 'http://localhost:0', DEV_OUTBOX_ENABLED: '0', OWNER_EMAIL: 'owner@example.com', ADMIN_EMAILS: 'admin@example.com,admin2@example.com' });
 const { start, server } = await import('../server/index.js');
 const { resetRateLimits } = await import('../server/lib/http.js');
 const { db, get, all, run } = await import('../server/lib/db.js');
@@ -53,12 +53,12 @@ test('malformed cookie and decoded paths are rejected gracefully instead of cras
 test('owner setup: wrong token rejected, right token works once, then disabled', async () => {
   const anon = new Client();
   assert.equal((await anon.get('/api/setup/status')).data.needsSetup, true);
-  assert.equal((await anon.post('/api/setup/owner', { token: 'nope', email: 'luxurybhaarat@gmail.com', username: 'owner', password: PW })).status, 403);
+  assert.equal((await anon.post('/api/setup/owner', { token: 'nope', email: 'owner@example.com', username: 'owner', password: PW })).status, 403);
   assert.equal((await anon.post('/api/setup/owner', { token: process.env.OWNER_SETUP_TOKEN, email: 'someone@else.com', username: 'owner', password: PW })).status, 400);
   owner = new Client();
-  const r = await owner.post('/api/setup/owner', { token: process.env.OWNER_SETUP_TOKEN, email: 'luxurybhaarat@gmail.com', username: 'owner', password: PW });
+  const r = await owner.post('/api/setup/owner', { token: process.env.OWNER_SETUP_TOKEN, email: 'owner@example.com', username: 'owner', password: PW });
   assert.equal(r.status, 200); assert.equal(r.data.user.role, 'owner');
-  assert.equal((await new Client().post('/api/setup/owner', { token: process.env.OWNER_SETUP_TOKEN, email: 'luxurybhaarat@gmail.com', username: 'owner2', password: PW })).status, 404);
+  assert.equal((await new Client().post('/api/setup/owner', { token: process.env.OWNER_SETUP_TOKEN, email: 'owner@example.com', username: 'owner2', password: PW })).status, 404);
 });
 
 test('development outbox is disabled by default and owner-only when explicitly enabled', async () => {
@@ -81,17 +81,17 @@ test('passwords are hashed, never stored in plaintext; DB allows only one owner'
 test('registering with an authorised admin email does NOT grant admin access', async () => {
   resetRateLimits();
   const sneaky = new Client();
-  const r = await sneaky.post('/api/auth/register', { username: 'sinha_customer', email: 'sinhayash3107@gmail.com', password: PW });
+  const r = await sneaky.post('/api/auth/register', { username: 'admin_customer', email: 'admin@example.com', password: PW });
   assert.equal(r.data.user.role, 'customer');
   assert.equal((await sneaky.get('/api/admin/overview')).status, 403);
   assert.equal((await sneaky.get('/api/admin/products')).status, 403);
   // the owner's email cannot be registered as a customer either
-  assert.equal((await new Client().post('/api/auth/register', { username: 'imposter', email: 'luxurybhaarat@gmail.com', password: PW })).status, 400);
+  assert.equal((await new Client().post('/api/auth/register', { username: 'imposter', email: 'owner@example.com', password: PW })).status, 400);
 });
 
 test('owner invites an allow-listed admin; admin accepts via one-time link; non-allow-listed email refused', async () => {
   assert.equal((await owner.post('/api/admin/admins/invite', { email: 'random@evil.com', permissions: ['products'] })).status, 400);
-  const inv = await owner.post('/api/admin/admins/invite', { email: 'sinhayash3107@gmail.com', permissions: ['products', 'orders', 'inventory', 'sections', 'support', 'analytics', 'customers', 'categories', 'banners'] });
+  const inv = await owner.post('/api/admin/admins/invite', { email: 'admin@example.com', permissions: ['products', 'orders', 'inventory', 'sections', 'support', 'analytics', 'customers', 'categories', 'banners'] });
   assert.equal(inv.status, 200);
   const token = new URL(inv.data.devInviteLink.replace('#', '')).searchParams.get('token');
   admin = new Client();
@@ -102,7 +102,7 @@ test('owner invites an allow-listed admin; admin accepts via one-time link; non-
 });
 
 test('RBAC: admins cannot create/remove admins, see owner-only pages, or exceed granted permissions', async () => {
-  assert.equal((await admin.post('/api/admin/admins/invite', { email: '20dhruv08@gmail.com' })).status, 403);
+  assert.equal((await admin.post('/api/admin/admins/invite', { email: 'admin2@example.com' })).status, 403);
   assert.equal((await admin.get('/api/admin/admins')).status, 403);
   assert.equal((await admin.get('/api/admin/audit')).status, 403);
   assert.equal((await admin.get('/api/admin/security')).status, 403);
@@ -169,7 +169,7 @@ test('new-order notification + emails are created exactly once per recipient', a
   const n = all("SELECT * FROM notifications WHERE type='order.new'"); assert.equal(n.length, 1);
   await new Promise((r) => setTimeout(r, 50));
   const mails = outbox().filter((e) => e.event_key.startsWith(`order:${globalThis.__order.id}:new:`));
-  assert.deepEqual(mails.map((m) => m.to_email).sort(), ['luxurybhaarat@gmail.com', 'sinhayash3107@gmail.com']);
+  assert.deepEqual(mails.map((m) => m.to_email).sort(), ['admin@example.com', 'owner@example.com']);
   assert.match(mails[0].body, /NEW ORDER RECEIVED/);
   const list = (await admin.get('/api/admin/notifications')).data; assert.ok(list.notifications.some((x) => x.title === 'NEW ORDER RECEIVED')); assert.ok(list.unread >= 1);
   assert.throws(() => run('INSERT INTO notifications(type,title,ref_type,ref_id,created_at) VALUES (?,?,?,?,?)', 'order.new', 't', 'order', String(globalThis.__order.id), 'n'), /UNIQUE/, 'DB-level dedupe');
@@ -281,7 +281,7 @@ test('security: CSRF, lockout, validation, password reset, headers', async () =>
 });
 
 test('owner can change admin permissions and remove an admin (sessions revoked immediately)', async () => {
-  const adminRow = get("SELECT id FROM users WHERE email='sinhayash3107@gmail.com'");
+  const adminRow = get("SELECT id FROM users WHERE email='admin@example.com'");
   assert.equal((await owner.patch(`/api/admin/admins/${adminRow.id}`, { permissions: ['support'] })).status, 200);
   assert.equal((await admin.get('/api/admin/products')).status, 403, 'permission removal is immediate');
   assert.equal((await admin.get('/api/admin/tickets')).status, 200);

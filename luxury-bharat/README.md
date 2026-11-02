@@ -17,11 +17,11 @@ npm test               # 20 end-to-end API/security tests
 
 ## Owner account (one-time setup)
 1. Start the server. If no owner exists it prints a **one-time setup token** (or uses `OWNER_SETUP_TOKEN`).
-2. Open `/admin` → "First-time owner setup". The email must equal `OWNER_EMAIL` (`luxurybhaarat@gmail.com`). Choose a password (10+ chars, letters and numbers).
+2. Open `/admin` → "First-time owner setup". The email must equal the `OWNER_EMAIL` value in your `.env` file. Choose a password (10+ chars, letters and numbers).
 3. After that the endpoint returns 404 forever. The database itself forbids a second owner or demoting/deleting the owner (triggers + unique index). No password is hard-coded anywhere.
 
 ## Admin accounts (owner-controlled)
-- Authorised addresses come from `ADMIN_EMAILS` (default `sinhayash3107@gmail.com,20dhruv08@gmail.com`).
+- Authorised addresses come from `ADMIN_EMAILS`; configure these addresses in your private `.env` file before inviting admins.
 - Owner → Dashboard → **Admin Accounts → Invite admin**, pick the address and permissions. The person receives a single-use, 7-day link, sets their own password, and only then becomes an admin.
 - **Registering with a listed email never grants admin rights.** Owner → *Roles & Permissions* edits permissions live; removing an admin signs them out immediately.
 - Admins can never: invite/remove admins, edit the owner, open Website Settings, Security Settings, or Audit Logs. Enforced in the server (`requireOwner` / `requirePerm`), not just hidden in the UI.
