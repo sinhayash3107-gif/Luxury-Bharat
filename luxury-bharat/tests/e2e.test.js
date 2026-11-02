@@ -6,10 +6,11 @@ import os from 'node:os';
 import path from 'node:path';
 
 const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'lb-test-'));
-Object.assign(process.env, { NODE_ENV: 'development', DATA_DIR: dir, OWNER_SETUP_TOKEN: 'test-setup-token-123456', PAYMENT_MODE: 'test', APP_URL: 'http://localhost:0' });
+Object.assign(process.env, { NODE_ENV: 'development', DATA_DIR: dir, OWNER_SETUP_TOKEN: 'test-setup-token-123456', PAYMENT_MODE: 'test', APP_URL: 'http://localhost:0', DEV_OUTBOX_ENABLED: '0' });
 const { start, server } = await import('../server/index.js');
 const { resetRateLimits } = await import('../server/lib/http.js');
 const { db, get, all, run } = await import('../server/lib/db.js');
+const { config } = await import('../server/config.js');
 await start(0);
 const base = `http://127.0.0.1:${server.address().port}`;
 let sharp; try { sharp = (await import('sharp')).default; } catch { /* optional */ }
@@ -58,6 +59,17 @@ test('owner setup: wrong token rejected, right token works once, then disabled',
   const r = await owner.post('/api/setup/owner', { token: process.env.OWNER_SETUP_TOKEN, email: 'luxurybhaarat@gmail.com', username: 'owner', password: PW });
   assert.equal(r.status, 200); assert.equal(r.data.user.role, 'owner');
   assert.equal((await new Client().post('/api/setup/owner', { token: process.env.OWNER_SETUP_TOKEN, email: 'luxurybhaarat@gmail.com', username: 'owner2', password: PW })).status, 404);
+});
+
+test('development outbox is disabled by default and owner-only when explicitly enabled', async () => {
+  assert.equal((await new Client().get('/api/dev/outbox')).status, 404);
+  config.devOutboxEnabled = true;
+  try {
+    assert.equal((await new Client().get('/api/dev/outbox')).status, 401, 'anonymous users cannot read reset links');
+    assert.equal((await owner.get('/api/dev/outbox')).status, 200, 'the signed-in owner can preview development email');
+  } finally {
+    config.devOutboxEnabled = false;
+  }
 });
 
 test('passwords are hashed, never stored in plaintext; DB allows only one owner', () => {

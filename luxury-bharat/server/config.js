@@ -31,6 +31,7 @@ export const config = {
   uploadDir: path.join(dataDir, 'uploads'),
   publicDir: path.join(root, 'public'),
   trustProxy: process.env.TRUST_PROXY === '1',
+  devOutboxEnabled: process.env.DEV_OUTBOX_ENABLED === '1',
   ownerEmail: (process.env.OWNER_EMAIL || 'luxurybhaarat@gmail.com').toLowerCase(),
   adminAllowlist: list(process.env.ADMIN_EMAILS || 'sinhayash3107@gmail.com,20dhruv08@gmail.com'),
   setupToken: process.env.OWNER_SETUP_TOKEN || '',

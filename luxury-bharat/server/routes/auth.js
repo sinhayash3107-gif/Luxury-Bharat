@@ -3,7 +3,7 @@ import { get, run, tx, now } from '../lib/db.js';
 import { config } from '../config.js';
 import {
   hashPassword, verifyPassword, dummyHash, checkPassword, loadUser, createSession, destroySession, destroyUserSessions,
-  SESSION_COOKIE, issueToken, peekToken, consumeToken, checkLocked, recordFailure, recordSuccess, requireAuth, ensureSetupToken, checkSetupToken, setPermissions,
+  SESSION_COOKIE, issueToken, peekToken, consumeToken, checkLocked, recordFailure, recordSuccess, requireAuth, requireOwner, ensureSetupToken, checkSetupToken, setPermissions,
 } from '../lib/auth.js';
 import { audit } from '../lib/core.js';
 import { sendMail, emailHtml, fireAndForget, devOutbox } from '../lib/mail.js';
@@ -183,4 +183,8 @@ POST('/api/account/password', requireAuth, limit('pwchange', 10, 60 * 60_000), a
 });
 
 // ---------- development helpers (never registered in production) ----------
-if (!config.prod) GET('/api/dev/outbox', () => ({ note: 'Development only: emails that would have been sent.', emails: devOutbox(50) }));
+if (!config.prod) GET('/api/dev/outbox', (ctx) => {
+  if (!config.devOutboxEnabled) throw new HttpError(404, 'Not found.');
+  requireOwner(ctx);
+  return { note: 'Development only: emails that would have been sent.', emails: devOutbox(50) };
+});

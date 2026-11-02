@@ -33,7 +33,8 @@ npm test               # 18 end-to-end API/security tests
 | `DATA_DIR` | SQLite file + uploaded images. **Mount a persistent disk here.** |
 | `TRUST_PROXY=1` | Only behind your own reverse proxy (real client IPs for rate limits). |
 | `OWNER_EMAIL`, `ADMIN_EMAILS`, `OWNER_SETUP_TOKEN` | See above. |
-| `RESEND_API_KEY`, `MAIL_FROM` | Email via [Resend](https://resend.com). Without a key, emails are stored in `email_log` and printed to the console (development outbox at `/api/dev/outbox`, never available in production). |
+| `RESEND_API_KEY`, `MAIL_FROM` | Email via [Resend](https://resend.com). Without a key, emails are stored in `email_log` and printed to the console. |
+| `DEV_OUTBOX_ENABLED=1` | Optional local-only email preview at `/api/dev/outbox`. Disabled by default, requires owner sign-in, and unavailable in production. |
 | `PAYMENT_MODE` | `test` = clearly labelled fake payment (development only). `live` = Razorpay. |
 | `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET` | Razorpay credentials. Server-side only. |
 
