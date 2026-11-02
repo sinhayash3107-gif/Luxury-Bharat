@@ -1,0 +1,22 @@
+{
+  "name": "luxury-bharat",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Luxury Bharat - premium ecommerce platform (storefront, CMS, admin, orders, support)",
+  "engines": {
+    "node": ">=22.13"
+  },
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "cross-env NODE_ENV=development node --watch server/index.js",
+    "seed:demo": "node server/seed-demo.js",
+    "test": "node --test tests/e2e.test.js"
+  },
+  "optionalDependencies": {
+    "sharp": "^0.35.5"
+  },
+  "devDependencies": {
+    "cross-env": "^10.1.0"
+  }
+}

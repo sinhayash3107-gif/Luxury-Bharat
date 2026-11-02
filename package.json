@@ -1,0 +1,12 @@
+{
+  "name": "luxury-bharat",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Root-level command launcher for the Luxury Bharat app in ./luxury-bharat",
+  "scripts": {
+    "start": "npm --prefix luxury-bharat run start",
+    "dev": "npm --prefix luxury-bharat run dev",
+    "seed:demo": "npm --prefix luxury-bharat run seed:demo",
+    "test": "npm --prefix luxury-bharat test"
+  }
+}
