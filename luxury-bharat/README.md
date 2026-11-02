@@ -12,7 +12,7 @@ npm install            # installs optional `sharp` for image optimisation
 cp .env.example .env   # then edit
 npm run seed:demo      # optional: demo catalogue (generated placeholder art, not photography)
 npm start              # http://localhost:3000   (dashboard: /admin)
-npm test               # 18 end-to-end API/security tests
+npm test               # 20 end-to-end API/security tests
 ```
 
 ## Owner account (one-time setup)
@@ -53,5 +53,5 @@ Vercel's serverless runtime can't hold a SQLite file or the SSE connections. To 
 scrypt password hashing with per-user salt · HttpOnly + SameSite=Lax session cookies (Secure in production), hashed session tokens, expiry · CSRF token on every state-changing request + Origin check · mandatory email verification before ordering · single-use, hashed verify/reset/invite tokens · reset revokes all sessions · per-IP and per-account rate limits + account lockout (configurable) · generic responses on forgot-password · server-side validation of every field, price, stock and address · parameterised SQL only · output escaping in the UI (templating escapes by default), links restricted to `/…` or `https://` · CSP, nosniff, frame-ancestors, Referrer-Policy, Permissions-Policy, HSTS · upload sniffing + size limits · RBAC on the server, owner immutability in the database · audit log of admin actions · stock changes only via atomic SQL guarded by `stock >= qty` · unpaid online orders auto-cancel after 30 min and return stock.
 
 ## Tests that were run
-- `npm test`: 18 end-to-end tests (real server, temp DB) — owner setup, RBAC, invites, uploads, products, search, checkout validation, price tampering, concurrent overselling (6 buyers / 3 units → exactly 3 orders), cancellation restoring stock once, notification + email de-duplication, analytics rules, section builder, tickets, CSRF, lockout, reset, SQL-injection probe, path traversal.
+- `npm test`: 20 end-to-end tests (real server, temp DB) — owner setup, RBAC, invites, uploads, products, search, checkout validation, price tampering, concurrent overselling (6 buyers / 3 units → exactly 3 orders), cancellation restoring stock once, notification + email de-duplication, analytics rules, section builder, tickets, CSRF, lockout, reset, SQL-injection probe, path traversal, malformed request handling, and development outbox access control.
 - Browser run (Chromium via Playwright): 29 checks of the real UI (register → verify → search → cart → 5-step checkout → test payment → live "NEW ORDER RECEIVED" alert in the owner's dashboard → status update → customer timeline; section builder create/preview/publish/hide; product creation with image upload; mobile layout) plus a smoke test of every admin and account screen. No JavaScript errors.
